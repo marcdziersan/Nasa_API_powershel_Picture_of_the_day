@@ -74,7 +74,16 @@ Wenn alles geklappt hat, solltest du jetzt ein brandneues Weltraum-Wallpaper auf
 # Die Automagie: Tägliche Ausführung einrichten
 Jetzt bringen wir dem PC bei, das jeden Tag von selbst zu tun.
 
-Öffne die Windows Aufgabenplanung (einfach im Startmenü suchen).
+Öffne die Windows Aufgabenplanung 
+
+# 1. Variante 
+  - In Startmenü Aufagebenplanung suchen.
+
+# 2. Variante
+
+  - Drücke Windows-Taste + R
+  - Gib ein: taskschd.msc
+  - Mit Enter bestätigen → die Aufgabenplanung öffnet sich direkt.
 
 Klicke rechts auf "Einfache Aufgabe erstellen...".
 
@@ -88,7 +97,13 @@ Bei "Programm/Skript" trägst du powershell.exe ein.
 
 Bei "Argumente hinzufügen" kommt der wichtigste Teil rein. Gib hier den kompletten Pfad zu deiner Skript-Datei an, inklusive des -File Parameters. Beispiel:
 
--File "C:\Users\DeinName\Desktop\NasaBilder\skript.ps1"
+# Variante 1
+
+  -File "C:\Users\DeinName\Desktop\NasaBilder\skript.ps1"
+
+# Variante 2
+
+  -File "%HOMEDRIVE%%HOMEPATH%\Desktop\NasaBilder\skript.ps1"
 
 <img width="449" height="277" alt="image" src="https://github.com/user-attachments/assets/d2f07e68-061c-4aff-87fc-200c4a5abf45" />
 
