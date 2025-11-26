@@ -1,263 +1,391 @@
-# NASA-Powershell-Hacking  
-## Dein Desktop, direkt aus dem All
-
-Mit einer offiziellen Backdoor, der NASA API.
-
-Kein Bock mehr auf den immer gleichen Windows-Hintergrund?  
-Dieses Skript verbindet sich (legal!) mit der NASA, zieht sich täglich das aktuelle **Astronomy Picture of the Day (APOD)** und knallt es dir automatisch als Desktophintergrund drauf.
-
-Einmal einrichten, für immer staunen.
-
----
-
-## Was das Skript macht
-
-- **Fragt deinen NASA-API-Key ab** (oder liest ihn aus `NASA_API_KEY`, wenn vorhanden)
-- **Ruft die APOD-API auf** und holt sich die Metadaten zum Bild des Tages
-- **Lädt das Bild herunter** und speichert es im Ordner:
-  - Standard: `C:\Users\<DeinName>\Desktop\NasaBilder`
-- **Setzt das Bild als Wallpaper**:
-  - Direkt über die Windows-API (`SystemParametersInfo`)
-- **Richtet auf Wunsch einen geplanten Task ein**:
-  - Tägliche Ausführung um eine von dir gewählte Uhrzeit
-  - Ruft dasselbe Skript mit dem Parameter `-Scheduled` auf
-- **Merkt sich deine Einstellungen** in einer kleinen JSON-Config:
-  - `nasa_apod_config.json` im gleichen Ordner wie das Skript
-
----
-
-## Features im Überblick
-
-- Einmal-Setup, danach komplett automatisch
-- Fragt nach Adminrechten, wenn es sinnvoll ist (für den Task Scheduler)
-- Erkennt, ob ein geplanter Task schon existiert – nervt dich nicht jedes Mal
-- Funktioniert mit und ohne Leerzeichen im Skriptpfad
-- Läuft im geplanten Modus komplett stumm:
-  - Keine Pop-ups
-  - Kein Output
-  - Nur Bild holen und Hintergrund setzen
-
----
-
-## Voraussetzungen
-
-- Windows (10/11, mit Aufgabenplanung / Task Scheduler)
-- PowerShell (Standard unter Windows)
-- Internetzugang
-- Ein eigener NASA-API-Key
-
-### NASA-API-Key besorgen
-
-1. Öffne: https://api.nasa.gov/
-2. Formular ausfüllen (Name, E-Mail)
-3. Du erhältst sofort einen **API-Key** im Browser und per Mail
-4. Diesen Key kopierst du dir – du brauchst ihn im Setup
-
-Optional: Du kannst den Key auch als Umgebungsvariable setzen:
-
-```powershell
-setx NASA_API_KEY "DEIN_API_KEY"
-````
-
-Dann liest das Skript ihn automatisch ein.
-
----
-
-## Installation
-
-### 1. Ordner anlegen
-
-Lege dir einen Ordner an, z. B.:
-
-```text
-C:\Users\<DeinName>\Desktop\nasa
-```
-
-### 2. Skript speichern
-
-Speichere die Datei als `Skript.ps1` in diesem Ordner.
-
-Beispiel:
-
-```text
-C:\Users\<DeinName>\Desktop\nasa\Skript.ps1
-```
-
-### 3. Erste Ausführung
-
-Öffne eine **normale** PowerShell (nicht unbedingt als Admin) und gehe in den Ordner:
-
-```powershell
-cd C:\Users\<DeinName>\Desktop\nasa
-.\Skript.ps1
-```
-
-Beim ersten Start passiert Folgendes:
-
-1. Das Skript prüft, ob es Adminrechte hat und bietet dir an, sich mit erhöhten Rechten neu zu starten (UAC-Prompt).
-
-2. Es startet die **Ersteinrichtung**:
-
-   * Fragt nach deinem NASA-API-Key (falls nicht in `NASA_API_KEY` gesetzt)
-   * Zeigt dir den Standard-Ordner für Bilder (`Desktop\NasaBilder`) und lässt dich auf Wunsch einen anderen Pfad wählen
-   * Prüft, ob es bereits eine geplante Aufgabe namens `NASA APOD Wallpaper` gibt
-   * Bietet dir an, eine tägliche Aufgabe anzulegen und fragt nach der Uhrzeit (Standard: `08:00`)
-
-3. Am Ende der Ersteinrichtung lädt es das aktuelle APOD-Bild und setzt es als Wallpaper.
-
-Wenn alles geklappt hat, findest du das Bild z. B. hier:
-
-```text
-C:\Users\<DeinName>\Desktop\NasaBilder\2025-11-26 - Globular Cluster M15 Deep Field.jpg
-```
-
----
-
-## Wie das Skript intern arbeitet
-
-### Config-Datei
-
-Im gleichen Ordner wie das Skript liegt danach:
-
-```text
-nasa_apod_config.json
-```
-
-Darin stehen u. a.:
-
-* `ApiKey`
-* `TargetFolder`
-* `RunTime` (für dich, aktuell nur informativ)
-* `TaskCreated` (Merker, ob das Skript bereits versucht hat, den Task anzulegen)
-
-Damit ist das Skript beim nächsten Start „smart“ genug, um dich nicht jedes Mal neu zu befragen.
-
-### Geplante Aufgabe
-
-Die Aufgabe heißt:
-
-```text
-NASA APOD Wallpaper
-```
-
-Sie startet:
-
-```text
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "<Pfad zu Skript.ps1>" -Scheduled
-```
-
-Wichtig:
-
-* Im **Scheduled-Modus** (`-Scheduled`) läuft kein Setup, keine Rückfrage, kein UAC.
-* Es wird nur:
-
-  * die Config gelesen
-  * das Bild des Tages geladen (falls noch nicht vorhanden)
-  * dein Desktop-Hintergrund aktualisiert
-
----
-
-## Manuelle Nutzung
-
-Du kannst das Skript jederzeit manuell starten, um sofort das aktuelle APOD-Bild zu setzen:
-
-```powershell
-cd C:\Users\<DeinName>\Desktop\nasa
-.\Skript.ps1
-```
-
-Wenn bereits alles eingerichtet ist:
-
-* Keine Fragen mehr
-* Bild wird aktualisiert
-* Ausgabe zeigt nur kurz den Pfad des gesetzten Wallpapers
-
----
-
-## Setup erzwingen / ändern
-
-Wenn du das Setup später noch einmal bewusst durchlaufen möchtest (anderer Ordner, anderer Key, Task neu anlegen), kannst du das Skript mit `-ForceSetup` starten:
-
-```powershell
-cd C:\Users\<DeinName>\Desktop\nasa
-.\Skript.ps1 -ForceSetup
-```
-
-Dann:
-
-* werden API-Key, Zielordner und Task-Einrichtung erneut abgefragt
-* wird die `nasa_apod_config.json` aktualisiert
-
----
-
-## Typische Probleme & Lösungen
-
-### 1. Aufgabe lässt sich nicht anlegen
-
-Symptom: Rote Fehlermeldung à la „Access denied“ oder „Register-ScheduledTask…“.
-
-Lösung:
-
-* PowerShell **als Administrator** starten
-* Ordner wechseln
-* Skript erneut ausführen:
-
-```powershell
-cd C:\Users\<DeinName>\Desktop\nasa
-.\Skript.ps1
-```
-
-Das Skript erkennt, dass noch kein Task existiert, und fragt erneut nach.
-
-### 2. Kein Bild, weil APOD ein Video ist
-
-Manchmal ist das Astronomy Picture of the Day ein Video (z. B. YouTube). In diesem Fall:
-
-* erkennt das Skript `media_type = "video"`
-* bricht einfach still ab
-* lässt dein aktuelles Wallpaper unverändert
-
-### 3. NASA-API-Key falsch oder gesperrt
-
-Symptom:
-
-* Manuelle Ausführung zeigt Fehlermeldung beim Abruf
-* Oder es kommt gar kein Bild
-
-Lösungen:
-
-1. Key auf [https://api.nasa.gov](https://api.nasa.gov) kontrollieren oder neu generieren.
-2. Script mit `-ForceSetup` starten und neuen Key eingeben.
-
----
-
-## Sicherheit & Rechte
-
-* Das Skript nutzt ausschließlich die **offizielle NASA-API**.
-* Die API liefert öffentlich verfügbare Bilder und Metadaten.
-* Es werden keine persönlichen Daten an NASA zurückgeschickt.
-* Die Adminrechte werden nur benötigt, um die geplante Aufgabe sauber zu registrieren.
-* Im normalen täglichen Betrieb (Task Scheduler) läuft der Job ohne erneute Rückfragen.
-
----
-
-## Lizenz
-
-Dieses Skript steht unter der **MIT-Lizenz**.
-
-Kurzfassung:
-
-* Du darfst den Code frei verwenden, anpassen und in eigene Projekte integrieren.
-* Es gibt keine Garantie und keinen Support-Anspruch.
-* Wenn du den Code weitergibst, solltest du die Lizenz beilegen.
-
----
-
-## TL;DR
-
-* Skript in einen Ordner legen
-* PowerShell öffnen, Skript starten
-* API-Key eingeben, Zielordner bestätigen, Uhrzeit wählen
-* Fertig: Dein Desktop aktualisiert sich jetzt jeden Tag automatisch mit dem aktuellen NASA-APOD-Bild.
-
-Willkommen beim NASA-Powershell-Hacking.
+param(
+    [switch]$Scheduled,   # Wird von der Aufgabenplanung gesetzt: kein Setup, keine Rueckfragen
+    [switch]$ForceSetup   # Optional: Setup erzwingen, z.B. wenn du etwas aendern willst
+)
+
+# ---------------------------------------------------------
+# Optional: Adminrechte holen (nur bei manuellem Start)
+# ---------------------------------------------------------
+# Idee:
+# - Viele Operationen auf der Aufgabenplanung (Register-ScheduledTask)
+#   funktionieren zuverlaessiger mit Adminrechten.
+# - Wenn das Skript NICHT als Admin laeuft und NICHT aus der Aufgabenplanung
+#   gestartet wurde, wird dem Benutzer angeboten, sich per UAC-Prompt
+#   einmalig Adminrechte zu holen.
+
+if (-not $Scheduled) {
+    # Aktuelle Windows-Identitaet ermitteln
+    $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    # Principal-Objekt fuer Rollenabfrage (z.B. Administrator)
+    $principal       = New-Object Security.Principal.WindowsPrincipal($currentIdentity)
+    # Pruefen, ob aktuelle Identitaet Administrator-Rechte hat
+    $isAdmin         = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+    if (-not $isAdmin) {
+        # Hinweis fuer den Benutzer
+        Write-Host 'Dieses Skript kann die geplante Aufgabe zuverlaessiger einrichten, wenn es mit Administratorrechten laeuft.' -ForegroundColor Yellow
+        $answer = Read-Host 'Jetzt mit Adminrechten neu starten? (J/N, Standard: J)'
+
+        # Standard: J, wenn leer
+        if ([string]::IsNullOrWhiteSpace($answer) -or $answer -match '^[JjYy]') {
+            # Neuen Prozess vorbereiten, der PowerShell mit "runas" (UAC) startet
+            $psi = New-Object System.Diagnostics.ProcessStartInfo
+            $psi.FileName  = 'powershell.exe'
+            # Aktuelles Skript erneut starten, mit Bypass und ohne Profil
+            $psi.Arguments = '-NoProfile -ExecutionPolicy Bypass -File "' + $PSCommandPath + '"'
+            if ($ForceSetup) {
+                # Falls der Benutzer urspruenglich mit -ForceSetup gestartet hat,
+                # Parameter beim Neustart beibehalten
+                $psi.Arguments += ' -ForceSetup'
+            }
+            # "runas" sorgt fuer den UAC-Dialog
+            $psi.Verb = 'runas'
+            try {
+                [System.Diagnostics.Process]::Start($psi) | Out-Null
+            } catch {
+                Write-Host 'Start mit Adminrechten wurde abgebrochen oder ist fehlgeschlagen.' -ForegroundColor Red
+            }
+            # Aktuelle (nicht-Admin) Instanz beenden
+            exit
+        }
+    }
+}
+
+# ---------------------------------------------------------
+# Grundkonstanten & Pfade
+# ---------------------------------------------------------
+
+# Anzeigename der geplanten Aufgabe
+$TaskName   = 'NASA APOD Wallpaper'
+
+# Vollstaendiger Pfad zu diesem Skript (wichtig fuer den Task)
+$ScriptPath = $MyInvocation.MyCommand.Path
+
+# Config-Datei liegt im gleichen Verzeichnis wie das Skript
+$ConfigFile = Join-Path -Path $PSScriptRoot -ChildPath 'nasa_apod_config.json'
+
+# Standard-Zielordner fuer heruntergeladene Bilder (Desktop\NasaBilder)
+$DefaultTargetFolder = Join-Path -Path $env:USERPROFILE -ChildPath 'Desktop\NasaBilder'
+
+# Standardzeit fuer den taeglichen Task-Lauf (als String im Format HH:mm)
+$DefaultRunTime = '08:00'
+
+
+# ---------------------------------------------------------
+# Hilfsfunktionen: Config laden & speichern
+# ---------------------------------------------------------
+# Die Config-Datei haelt:
+# - ApiKey       : NASA-API-Schluessel
+# - TargetFolder : Zielverzeichnis fuer die Bilder
+# - RunTime      : Gewuenschte Uhrzeit fuer den Task (derzeit rein informativ)
+# - TaskCreated  : Ob das Skript bereits versucht hat, einen Task anzulegen
+
+function Load-Config {
+    if (Test-Path $ConfigFile) {
+        try {
+            # JSON-Konfiguration als String einlesen
+            $json = Get-Content -Path $ConfigFile -Raw -ErrorAction Stop
+            # In PowerShell-Objekt umwandeln
+            $cfg  = $json | ConvertFrom-Json -ErrorAction Stop
+            return $cfg
+        } catch {
+            # Bei Fehlern wird eine neue Standard-Config erzeugt
+        }
+    }
+
+    # Standardconfig zurueckgeben, wenn keine Datei vorhanden ist oder diese defekt war
+    return [pscustomobject]@{
+        ApiKey      = ''
+        TargetFolder= $DefaultTargetFolder
+        RunTime     = $DefaultRunTime
+        TaskCreated = $false
+    }
+}
+
+function Save-Config($cfg) {
+    # Objekt als JSON auf die Platte schreiben (UTF-8)
+    $cfg | ConvertTo-Json -Depth 5 | Set-Content -Path $ConfigFile -Encoding UTF8
+}
+
+
+# ---------------------------------------------------------
+# Scheduled Task anlegen
+# ---------------------------------------------------------
+# Aufgabe:
+# - Pruefen, ob ein Task mit dem gegebenen Namen existiert
+# - Falls nein, Benutzer fragen und ggf. taeglichen Task einrichten,
+#   der dieses Skript mit Parameter -Scheduled ausfuehrt.
+
+function Ensure-ScheduledTask {
+    param(
+        [string]$TaskName,
+        [string]$ScriptPath,
+        [string]$RunTime
+    )
+
+    # Wenn wir bereits aus der Aufgabenplanung laufen, darf hier KEINE Interaktion stattfinden
+    if ($Scheduled) {
+        return $false
+    }
+
+    # ScheduledTasks-Modul nur nutzen, wenn vorhanden (ab Windows 8 typisch)
+    $module = Get-Module -ListAvailable -Name ScheduledTasks
+    if (-not $module) {
+        Write-Host "Hinweis: Modul 'ScheduledTasks' nicht verfuegbar. Task kann nicht automatisch angelegt werden." -ForegroundColor Yellow
+        return $false
+    }
+
+    Import-Module ScheduledTasks -ErrorAction SilentlyContinue
+
+    # Existiert die Aufgabe bereits?
+    try {
+        $existing = Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop
+        if ($existing) {
+            # Bereits vorhanden -> nichts zu tun
+            return $true
+        }
+    } catch {
+        # Kein bestehender Task -> weiter unten neu anlegen
+    }
+
+    Write-Host ''
+    Write-Host "Noch keine geplante Aufgabe '$TaskName' gefunden." -ForegroundColor Cyan
+
+    # Benutzer fragen, ob eine taegliche Aufgabe erstellt werden soll
+    $answer = Read-Host 'Automatisch eine taegliche Aufgabe anlegen? (J/N, Standard: J)'
+    if ([string]::IsNullOrWhiteSpace($answer)) {
+        $answer = 'J'
+    }
+
+    if ($answer -notmatch '^[JjYy]') {
+        Write-Host 'Okay, keine geplante Aufgabe angelegt. Skript laeuft nur manuell.' -ForegroundColor Yellow
+        return $false
+    }
+
+    # Uhrzeit fuer taeglichen Lauf abfragen
+    $timePrompt = "Uhrzeit fuer taeglichen Lauf? (HH:mm, Standard: $DefaultRunTime)"
+    $timeString = Read-Host $timePrompt
+    if ([string]::IsNullOrWhiteSpace($timeString)) {
+        $timeString = $DefaultRunTime
+    }
+
+    try {
+        # Validierung der Eingabe als Zeit im Format HH:mm
+        $time = [DateTime]::ParseExact($timeString, "HH:mm", $null)
+    } catch {
+        # Fallback: Standardzeit verwenden
+        Write-Host "Zeitformat nicht erkannt, verwende $DefaultRunTime." -ForegroundColor Yellow
+        $time = [datetime]::Today.AddHours(8)
+        $timeString = $DefaultRunTime
+    }
+
+    # Aktion fuer die Aufgabenplanung:
+    # - PowerShell ohne Profil, mit ExecutionPolicy Bypass
+    # - dieses Skript (ScriptPath) als -File, plus -Scheduled
+    #   ScriptPath wird in Anfuehrungszeichen gesetzt, damit auch Ordner mit Leerzeichen funktionieren.
+    $argument = ('-NoProfile -ExecutionPolicy Bypass -File "{0}" -Scheduled' -f $ScriptPath)
+    $action   = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $argument
+
+    # Trigger: taeglich zur angegebenen Uhrzeit
+    $trigger  = New-ScheduledTaskTrigger -Daily -At $time
+
+    try {
+        # Aufgabe registrieren
+        Register-ScheduledTask `
+            -TaskName    $TaskName `
+            -Action      $action `
+            -Trigger     $trigger `
+            -Description 'Laedt das NASA Astronomy Picture of the Day und setzt es als Desktop-Hintergrund.'
+
+        Write-Host "Geplante Aufgabe '$TaskName' wurde angelegt (taeglich um $($time.ToString('HH:mm')))." -ForegroundColor Green
+        return $true
+    } catch {
+        # Fehler bei der Registrierung (z.B. fehlende Rechte)
+        Write-Host 'Konnte die geplante Aufgabe nicht anlegen:' -ForegroundColor Red
+        Write-Host $_.Exception.Message -ForegroundColor Red
+        Write-Host 'Tipp: PowerShell als Administrator starten und Skript erneut ausfuehren.' -ForegroundColor Yellow
+        return $false
+    }
+}
+
+
+# ---------------------------------------------------------
+# Interaktives Setup (nur bei Bedarf)
+# ---------------------------------------------------------
+# Ablauf:
+# - API-Key aus Config oder ENV uebernehmen, sonst abfragen
+# - Zielordner anzeigen und ggf. anpassen lassen
+# - Optional geplante Aufgabe einrichten
+
+function Run-Setup([ref]$cfgRef) {
+    $cfg = $cfgRef.Value
+
+    Write-Host ''
+    Write-Host 'NASA APOD Wallpaper - Ersteinrichtung' -ForegroundColor Cyan
+    Write-Host '-------------------------------------'
+
+    # API-Key aus Umgebungsvariable übernehmen, falls gesetzt und Config leer
+    if ([string]::IsNullOrWhiteSpace($cfg.ApiKey) -and $env:NASA_API_KEY) {
+        $cfg.ApiKey = $env:NASA_API_KEY
+        Write-Host 'NASA_API_KEY aus Umgebungsvariable gefunden und uebernommen.' -ForegroundColor Green
+    }
+
+    # Wenn immer noch kein API-Schluessel vorhanden ist, Benutzer fragen
+    if ([string]::IsNullOrWhiteSpace($cfg.ApiKey)) {
+        Write-Host ''
+        Write-Host 'API-Schluessel benoetigt.' -ForegroundColor Yellow
+        Write-Host 'Du bekommst ihn kostenlos unter: https://api.nasa.gov/' -ForegroundColor DarkGray
+        $key = Read-Host 'Bitte NASA API-Key eingeben (oder leer lassen zum Abbrechen)'
+        if ([string]::IsNullOrWhiteSpace($key)) {
+            Write-Host 'Kein API-Key eingegeben. Abbruch.' -ForegroundColor Red
+            exit 1
+        }
+        $cfg.ApiKey = $key
+    }
+
+    # Aktuellen Zielordner anzeigen und bei Bedarf anpassen
+    Write-Host ''
+    Write-Host 'Aktueller Zielordner fuer Bilder:' -ForegroundColor Cyan
+    Write-Host "  $($cfg.TargetFolder)" -ForegroundColor White
+    $folderInput = Read-Host 'Enter fuer Standard lassen oder neuen Pfad eingeben'
+    if (-not [string]::IsNullOrWhiteSpace($folderInput)) {
+        $cfg.TargetFolder = $folderInput.Trim()
+    }
+
+    # Optional: geplante Aufgabe anlegen
+    $taskCreated = Ensure-ScheduledTask -TaskName $TaskName -ScriptPath $ScriptPath -RunTime $cfg.RunTime
+    if ($taskCreated) {
+        $cfg.TaskCreated = $true
+    }
+
+    # Aenderungen an den Aufrufer zurueckgeben
+    $cfgRef.Value = $cfg
+}
+
+
+# ---------------------------------------------------------
+# APOD holen & Wallpaper setzen
+# ---------------------------------------------------------
+# Funktion:
+# - NASA APOD API mit dem gegebenen ApiKey aufrufen
+# - Nur "image"-Antworten verarbeiten (Videos werden uebersprungen)
+# - Bild im TargetFolder speichern (Dateiname: yyyy-MM-dd - Titel.jpg)
+# - Windows-Desktop-Hintergrund auf dieses Bild setzen
+
+function Set-NasaApodWallpaper {
+    param(
+        [string]$ApiKey,
+        [string]$TargetFolder
+    )
+
+    # Ohne API-Key kann kein Abruf erfolgen
+    if ([string]::IsNullOrWhiteSpace($ApiKey)) {
+        # Im Scheduled-Modus silently exit
+        if ($Scheduled) { return }
+        Write-Host 'Kein NASA API-Key konfiguriert.' -ForegroundColor Red
+        return
+    }
+
+    # Zielordner sicherstellen
+    if (-not (Test-Path $TargetFolder)) {
+        New-Item -ItemType Directory -Path $TargetFolder | Out-Null
+    }
+
+    # API-URL mit Key zusammensetzen
+    $apiUrl = "https://api.nasa.gov/planetary/apod?api_key=$ApiKey"
+
+    try {
+        # APOD-Daten abrufen (Invoke-RestMethod gibt direkt ein Objekt zurueck)
+        $response = Invoke-RestMethod -Uri $apiUrl -ErrorAction Stop
+
+        # Falls es heute ein Video ist, wird nichts gemacht
+        if ($response.media_type -ne 'image') {
+            return
+        }
+
+        # Titel auf Dateisystem-sichere Zeichen reduzieren
+        $title = $response.title -replace '[\\/:*?"<>|]', ''
+        # Datum im Format yyyy-MM-dd
+        $date  = Get-Date -Format "yyyy-MM-dd"
+        # Dateiname inklusive Datum und Titel
+        $fileName = "$date - $title.jpg"
+        # Vollstaendiger Pfad zur Bilddatei
+        $filePath = Join-Path -Path $TargetFolder -ChildPath $fileName
+
+        # Bild nur herunterladen, wenn es noch nicht existiert (z.B. Mehrfachlauf an einem Tag)
+        if (-not (Test-Path $filePath)) {
+            # hdurl bevorzugen, sonst url
+            $imageUrl = if ($response.hdurl) { $response.hdurl } else { $response.url }
+            Invoke-WebRequest -Uri $imageUrl -OutFile $filePath -ErrorAction Stop
+        }
+
+        # C#-Code als Here-String: kapselt den Aufruf von SystemParametersInfo,
+        # um das Hintergrundbild zu setzen.
+        $code = @'
+using System.Runtime.InteropServices;
+public class Wallpaper {
+    [DllImport("user32.dll", CharSet=CharSet.Auto)]
+    private static extern int SystemParametersInfo (int uAction, int uParam, string lpvParam, int fuWinIni);
+    public static void Set(string path) {
+        SystemParametersInfo(20, 0, path, 0x01 | 0x02);
+    }
+}
+'@
+
+        # C#-Typ zur Laufzeit hinzufuegen (nur einmal pro Session notwendig)
+        Add-Type -TypeDefinition $code -ErrorAction SilentlyContinue
+        # Statische Methode aufrufen, um das Wallpaper zu setzen
+        [Wallpaper]::Set($filePath)
+
+        # Im manuellen Modus kurze Erfolgsmeldung ausgeben
+        if (-not $Scheduled) {
+            Write-Host 'Neues Wallpaper gesetzt:' -ForegroundColor Green
+            Write-Host "  $filePath" -ForegroundColor White
+        }
+
+    } catch {
+        # Im geplanten Task laeuft alles still; im manuellen Modus kurze Fehlerinfo
+        if (-not $Scheduled) {
+            Write-Host 'Fehler beim Abruf oder Setzen des Hintergrunds:' -ForegroundColor Red
+            Write-Host $_.Exception.Message -ForegroundColor DarkRed
+        }
+    }
+}
+
+
+# ---------------------------------------------------------
+# HAUPTLOGIK
+# ---------------------------------------------------------
+
+# Konfiguration laden (bestehende Datei oder Standardwerte)
+$config = Load-Config
+
+# Falls explizit -ForceSetup angegeben wurde (nur im manuellen Modus)
+if ($ForceSetup -and -not $Scheduled) {
+    Run-Setup -cfgRef ([ref]$config)
+    Save-Config -cfg $config
+}
+
+# Fall 1: Noch kein API-Key vorhanden
+if ([string]::IsNullOrWhiteSpace($config.ApiKey)) {
+    if (-not $Scheduled) {
+        # Im interaktiven Modus Setup anstossen
+        Run-Setup -cfgRef ([ref]$config)
+        Save-Config -cfg $config
+    } else {
+        # Im Task-Lauf ohne Key einfach still beenden
+        return
+    }
+} else {
+    # Fall 2: API-Key vorhanden, aber laut Config noch kein Task angelegt
+    if (-not $config.TaskCreated -and -not $Scheduled) {
+        $taskCreated = Ensure-ScheduledTask -TaskName $TaskName -ScriptPath $ScriptPath -RunTime $config.RunTime
+        if ($taskCreated) {
+            $config.TaskCreated = $true
+            Save-Config -cfg $config
+        }
+    }
+}
+
+# APOD abrufen und Wallpaper setzen (funktioniert in beiden Modi)
+Set-NasaApodWallpaper -ApiKey $config.ApiKey -TargetFolder $config.TargetFolder
