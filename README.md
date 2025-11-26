@@ -1,109 +1,263 @@
-# NASA-Powershell-Hacking 
-Mit einer offiziellen Backdoor, der API!
+# NASA-Powershell-Hacking  
+## Dein Desktop, direkt aus dem All
 
-Keinen Bock mehr auf deinen langweiligen Desktop? Dieses Skript hackt sich (legal!) in die NASA, zieht sich jeden Tag das "Astronomy Picture of the Day" und knallt es dir als Desktophintergrund rein. Vollautomatisch. Einmal einrichten, für immer staunen.
+Mit einer offiziellen Backdoor, der NASA API.
 
-![2025-09-02 - The Horsehead and Flame Nebulas](https://github.com/user-attachments/assets/7c34eba7-6971-4248-a804-3cb45a42c6af)
+Kein Bock mehr auf den immer gleichen Windows-Hintergrund?  
+Dieses Skript verbindet sich (legal!) mit der NASA, zieht sich täglich das aktuelle **Astronomy Picture of the Day (APOD)** und knallt es dir automatisch als Desktophintergrund drauf.
 
-Was das Ding tut:
-Kontaktiert die NASA-API: Holt sich die Infos zum aktuellen Bild des Tages.
+Einmal einrichten, für immer staunen.
 
-Lädt das Bild herunter: Speichert eine HD-Version in einem Ordner auf deinem Desktop.
+---
 
-Setzt das Wallpaper: Macht das neue Bild zu deinem Desktophintergrund.
+## Was das Skript macht
 
-Läuft automatisch: Einmal eingerichtet, läuft es jeden Tag von selbst.
+- **Fragt deinen NASA-API-Key ab** (oder liest ihn aus `NASA_API_KEY`, wenn vorhanden)
+- **Ruft die APOD-API auf** und holt sich die Metadaten zum Bild des Tages
+- **Lädt das Bild herunter** und speichert es im Ordner:
+  - Standard: `C:\Users\<DeinName>\Desktop\NasaBilder`
+- **Setzt das Bild als Wallpaper**:
+  - Direkt über die Windows-API (`SystemParametersInfo`)
+- **Richtet auf Wunsch einen geplanten Task ein**:
+  - Tägliche Ausführung um eine von dir gewählte Uhrzeit
+  - Ruft dasselbe Skript mit dem Parameter `-Scheduled` auf
+- **Merkt sich deine Einstellungen** in einer kleinen JSON-Config:
+  - `nasa_apod_config.json` im gleichen Ordner wie das Skript
 
-# So richtest du es ein (in 5 Minuten)
-Folge diesen Schritten und dein Desktop wird nie wieder derselbe sein.
+---
 
-# Schritt 1: Besorg dir den Zugangsschlüssel zur NASA
-Wir brauchen einen API-Schlüssel. Das ist quasi deine persönliche ID-Karte für die NASA-Datenbank. Keine Sorge, das ist kostenlos und dauert eine Minute.
+## Features im Überblick
 
-Geh auf die offizielle NASA API-Website. https://api.nasa.gov/
+- Einmal-Setup, danach komplett automatisch
+- Fragt nach Adminrechten, wenn es sinnvoll ist (für den Task Scheduler)
+- Erkennt, ob ein geplanter Task schon existiert – nervt dich nicht jedes Mal
+- Funktioniert mit und ohne Leerzeichen im Skriptpfad
+- Läuft im geplanten Modus komplett stumm:
+  - Keine Pop-ups
+  - Kein Output
+  - Nur Bild holen und Hintergrund setzen
 
-Fülle die paar Felder aus (Name, E-Mail) und klicke auf "Signup".
+---
 
-Du bekommst sofort einen API-Schlüssel angezeigt und auch per E-Mail zugeschickt. Kopier dir diesen Schlüssel, du brauchst ihn gleich.
+## Voraussetzungen
 
-<img width="1142" height="728" alt="image" src="https://github.com/user-attachments/assets/eab8bb50-00e3-4f91-b850-2f8d304834f1" />
+- Windows (10/11, mit Aufgabenplanung / Task Scheduler)
+- PowerShell (Standard unter Windows)
+- Internetzugang
+- Ein eigener NASA-API-Key
 
+### NASA-API-Key besorgen
 
-# Schritt 2: Skript herunterladen & anpassen
-Lade die Datei skript.ps1 aus diesem Repository herunter.
+1. Öffne: https://api.nasa.gov/
+2. Formular ausfüllen (Name, E-Mail)
+3. Du erhältst sofort einen **API-Key** im Browser und per Mail
+4. Diesen Key kopierst du dir – du brauchst ihn im Setup
 
-Erstelle einen Ordner, wo das Skript für immer leben soll. Zum Beispiel direkt auf deinem Desktop unter C:\Users\DEIN_BENUTZERNAME\Desktop\NasaBilder.
+Optional: Du kannst den Key auch als Umgebungsvariable setzen:
 
-Verschiebe die skript.ps1-Datei in diesen neuen Ordner.
+```powershell
+setx NASA_API_KEY "DEIN_API_KEY"
+````
 
-Öffne die skript.ps1-Datei mit einem beliebigen Texteditor (z.B. VS Code oder der normale Windows Editor).
+Dann liest das Skript ihn automatisch ein.
 
-Finde die Zeile $apiKey = "DEIN SCHLÜSSEL HIER" und ersetze DEIN_API_SCHLUESSEL_HIER mit dem Schlüssel, den du von der NASA bekommen hast. Speichern nicht vergessen!
+---
 
-<img width="915" height="221" alt="image" src="https://github.com/user-attachments/assets/de214519-37dc-4035-ba2c-2d9c3840256a" />
+## Installation
 
+### 1. Ordner anlegen
 
-# Schritt 3: PowerShell die Erlaubnis geben (Einmalige Sache)
-Windows ist von Natur aus misstrauisch und blockiert das Ausführen von Skripten. Das heben wir jetzt auf.
+Lege dir einen Ordner an, z. B.:
 
-Öffne das Windows-Startmenü, tippe PowerShell ein.
+```text
+C:\Users\<DeinName>\Desktop\nasa
+```
 
-Klicke mit der rechten Maustaste auf "Windows PowerShell" und wähle "Als Administrator ausführen".
+### 2. Skript speichern
 
-Gib den folgenden Befehl ein und drücke Enter:
+Speichere die Datei als `Skript.ps1` in diesem Ordner.
 
-Set-ExecutionPolicy RemoteSigned
+Beispiel:
 
-Bestätige die Frage mit J und drücke erneut Enter. Du kannst das Admin-Fenster jetzt schließen.
+```text
+C:\Users\<DeinName>\Desktop\nasa\Skript.ps1
+```
 
-# Schritt 4: Der erste Testlauf
-Jetzt testen wir, ob alles klappt.
+### 3. Erste Ausführung
 
-Öffne eine normale PowerShell (nicht als Admin).
+Öffne eine **normale** PowerShell (nicht unbedingt als Admin) und gehe in den Ordner:
 
-Navigiere zu dem Ordner, in dem dein Skript liegt. Beispiel:
+```powershell
+cd C:\Users\<DeinName>\Desktop\nasa
+.\Skript.ps1
+```
 
-cd Desktop\NasaBilder
+Beim ersten Start passiert Folgendes:
 
-Führe das Skript mit folgendem Befehl aus:
+1. Das Skript prüft, ob es Adminrechte hat und bietet dir an, sich mit erhöhten Rechten neu zu starten (UAC-Prompt).
 
-.\skript.ps1
+2. Es startet die **Ersteinrichtung**:
 
-Wenn alles geklappt hat, solltest du jetzt ein brandneues Weltraum-Wallpaper auf deinem Desktop sehen!
+   * Fragt nach deinem NASA-API-Key (falls nicht in `NASA_API_KEY` gesetzt)
+   * Zeigt dir den Standard-Ordner für Bilder (`Desktop\NasaBilder`) und lässt dich auf Wunsch einen anderen Pfad wählen
+   * Prüft, ob es bereits eine geplante Aufgabe namens `NASA APOD Wallpaper` gibt
+   * Bietet dir an, eine tägliche Aufgabe anzulegen und fragt nach der Uhrzeit (Standard: `08:00`)
 
-# Die Automagie: Tägliche Ausführung einrichten
-Jetzt bringen wir dem PC bei, das jeden Tag von selbst zu tun.
+3. Am Ende der Ersteinrichtung lädt es das aktuelle APOD-Bild und setzt es als Wallpaper.
 
-Öffne die Windows Aufgabenplanung 
+Wenn alles geklappt hat, findest du das Bild z. B. hier:
 
-# 1. Variante 
-  - In Startmenü Aufagebenplanung suchen.
+```text
+C:\Users\<DeinName>\Desktop\NasaBilder\2025-11-26 - Globular Cluster M15 Deep Field.jpg
+```
 
-# 2. Variante
+---
 
-  - Drücke Windows-Taste + R
-  - Gib ein: taskschd.msc
-  - Mit Enter bestätigen → die Aufgabenplanung öffnet sich direkt.
+## Wie das Skript intern arbeitet
 
-Klicke rechts auf "Einfache Aufgabe erstellen...".
+### Config-Datei
 
-Name: Gib ihr einen coolen Namen, z.B. Nasa Wallpaper Updater.
+Im gleichen Ordner wie das Skript liegt danach:
 
-Trigger: Wähle "Täglich" und lege eine Uhrzeit fest (z.B. morgens um 08:00).
+```text
+nasa_apod_config.json
+```
 
-Aktion: Wähle "Programm starten".
+Darin stehen u. a.:
 
-Bei "Programm/Skript" trägst du powershell.exe ein.
+* `ApiKey`
+* `TargetFolder`
+* `RunTime` (für dich, aktuell nur informativ)
+* `TaskCreated` (Merker, ob das Skript bereits versucht hat, den Task anzulegen)
 
-Bei "Argumente hinzufügen" kommt der wichtigste Teil rein. Gib hier den kompletten Pfad zu deiner Skript-Datei an, inklusive des -File Parameters. Beispiel:
+Damit ist das Skript beim nächsten Start „smart“ genug, um dich nicht jedes Mal neu zu befragen.
 
-# Variante 1
+### Geplante Aufgabe
 
-  -File "C:\Users\DeinName\Desktop\NasaBilder\skript.ps1"
+Die Aufgabe heißt:
 
-# Variante 2
+```text
+NASA APOD Wallpaper
+```
 
-  -File "%HOMEDRIVE%%HOMEPATH%\Desktop\NasaBilder\skript.ps1"
+Sie startet:
 
-<img width="449" height="277" alt="image" src="https://github.com/user-attachments/assets/d2f07e68-061c-4aff-87fc-200c4a5abf45" />
+```text
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "<Pfad zu Skript.ps1>" -Scheduled
+```
 
+Wichtig:
+
+* Im **Scheduled-Modus** (`-Scheduled`) läuft kein Setup, keine Rückfrage, kein UAC.
+* Es wird nur:
+
+  * die Config gelesen
+  * das Bild des Tages geladen (falls noch nicht vorhanden)
+  * dein Desktop-Hintergrund aktualisiert
+
+---
+
+## Manuelle Nutzung
+
+Du kannst das Skript jederzeit manuell starten, um sofort das aktuelle APOD-Bild zu setzen:
+
+```powershell
+cd C:\Users\<DeinName>\Desktop\nasa
+.\Skript.ps1
+```
+
+Wenn bereits alles eingerichtet ist:
+
+* Keine Fragen mehr
+* Bild wird aktualisiert
+* Ausgabe zeigt nur kurz den Pfad des gesetzten Wallpapers
+
+---
+
+## Setup erzwingen / ändern
+
+Wenn du das Setup später noch einmal bewusst durchlaufen möchtest (anderer Ordner, anderer Key, Task neu anlegen), kannst du das Skript mit `-ForceSetup` starten:
+
+```powershell
+cd C:\Users\<DeinName>\Desktop\nasa
+.\Skript.ps1 -ForceSetup
+```
+
+Dann:
+
+* werden API-Key, Zielordner und Task-Einrichtung erneut abgefragt
+* wird die `nasa_apod_config.json` aktualisiert
+
+---
+
+## Typische Probleme & Lösungen
+
+### 1. Aufgabe lässt sich nicht anlegen
+
+Symptom: Rote Fehlermeldung à la „Access denied“ oder „Register-ScheduledTask…“.
+
+Lösung:
+
+* PowerShell **als Administrator** starten
+* Ordner wechseln
+* Skript erneut ausführen:
+
+```powershell
+cd C:\Users\<DeinName>\Desktop\nasa
+.\Skript.ps1
+```
+
+Das Skript erkennt, dass noch kein Task existiert, und fragt erneut nach.
+
+### 2. Kein Bild, weil APOD ein Video ist
+
+Manchmal ist das Astronomy Picture of the Day ein Video (z. B. YouTube). In diesem Fall:
+
+* erkennt das Skript `media_type = "video"`
+* bricht einfach still ab
+* lässt dein aktuelles Wallpaper unverändert
+
+### 3. NASA-API-Key falsch oder gesperrt
+
+Symptom:
+
+* Manuelle Ausführung zeigt Fehlermeldung beim Abruf
+* Oder es kommt gar kein Bild
+
+Lösungen:
+
+1. Key auf [https://api.nasa.gov](https://api.nasa.gov) kontrollieren oder neu generieren.
+2. Script mit `-ForceSetup` starten und neuen Key eingeben.
+
+---
+
+## Sicherheit & Rechte
+
+* Das Skript nutzt ausschließlich die **offizielle NASA-API**.
+* Die API liefert öffentlich verfügbare Bilder und Metadaten.
+* Es werden keine persönlichen Daten an NASA zurückgeschickt.
+* Die Adminrechte werden nur benötigt, um die geplante Aufgabe sauber zu registrieren.
+* Im normalen täglichen Betrieb (Task Scheduler) läuft der Job ohne erneute Rückfragen.
+
+---
+
+## Lizenz
+
+Dieses Skript steht unter der **MIT-Lizenz**.
+
+Kurzfassung:
+
+* Du darfst den Code frei verwenden, anpassen und in eigene Projekte integrieren.
+* Es gibt keine Garantie und keinen Support-Anspruch.
+* Wenn du den Code weitergibst, solltest du die Lizenz beilegen.
+
+---
+
+## TL;DR
+
+* Skript in einen Ordner legen
+* PowerShell öffnen, Skript starten
+* API-Key eingeben, Zielordner bestätigen, Uhrzeit wählen
+* Fertig: Dein Desktop aktualisiert sich jetzt jeden Tag automatisch mit dem aktuellen NASA-APOD-Bild.
+
+Willkommen beim NASA-Powershell-Hacking.
