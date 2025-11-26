@@ -8,8 +8,6 @@ Dieses Skript verbindet sich (legal!) mit der NASA, zieht sich täglich das aktu
 
 Einmal einrichten, für immer staunen.
 
----
-
 ## Was das Skript macht
 
 - **Fragt deinen NASA-API-Key ab** (oder liest ihn aus `NASA_API_KEY`, wenn vorhanden)
@@ -24,8 +22,6 @@ Einmal einrichten, für immer staunen.
 - **Merkt sich deine Einstellungen** in einer kleinen JSON-Config:
   - `nasa_apod_config.json` im gleichen Ordner wie das Skript
 
----
-
 ## Features im Überblick
 
 - Einmal-Setup, danach komplett automatisch
@@ -36,8 +32,6 @@ Einmal einrichten, für immer staunen.
   - Keine Pop-ups
   - Kein Output
   - Nur Bild holen und Hintergrund setzen
-
----
 
 ## Voraussetzungen
 
@@ -60,8 +54,6 @@ setx NASA_API_KEY "DEIN_API_KEY"
 ````
 
 Dann liest das Skript ihn automatisch ein.
-
----
 
 ## Installation
 
@@ -110,8 +102,6 @@ Wenn alles geklappt hat, findest du das Bild z. B. hier:
 ```text
 C:\Users\<DeinName>\Desktop\NasaBilder\2025-11-26 - Globular Cluster M15 Deep Field.jpg
 ```
-
----
 
 ## Wie das Skript intern arbeitet
 
@@ -172,7 +162,6 @@ Wenn bereits alles eingerichtet ist:
 * Bild wird aktualisiert
 * Ausgabe zeigt nur kurz den Pfad des gesetzten Wallpapers
 
----
 
 ## Setup erzwingen / ändern
 
@@ -188,7 +177,6 @@ Dann:
 * werden API-Key, Zielordner und Task-Einrichtung erneut abgefragt
 * wird die `nasa_apod_config.json` aktualisiert
 
----
 
 ## Typische Probleme & Lösungen
 
@@ -229,8 +217,6 @@ Lösungen:
 1. Key auf [https://api.nasa.gov](https://api.nasa.gov) kontrollieren oder neu generieren.
 2. Script mit `-ForceSetup` starten und neuen Key eingeben.
 
----
-
 ## Sicherheit & Rechte
 
 * Das Skript nutzt ausschließlich die **offizielle NASA-API**.
@@ -238,8 +224,6 @@ Lösungen:
 * Es werden keine persönlichen Daten an NASA zurückgeschickt.
 * Die Adminrechte werden nur benötigt, um die geplante Aufgabe sauber zu registrieren.
 * Im normalen täglichen Betrieb (Task Scheduler) läuft der Job ohne erneute Rückfragen.
-
----
 
 ## Lizenz
 
@@ -251,7 +235,6 @@ Kurzfassung:
 * Es gibt keine Garantie und keinen Support-Anspruch.
 * Wenn du den Code weitergibst, solltest du die Lizenz beilegen.
 
----
 
 ## TL;DR
 
